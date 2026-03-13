@@ -129,11 +129,28 @@ module.exports = async function handler(req, res) {
 
         console.log("[CRON] Podcast metni başarıyla oluşturuldu.");
 
-        // 3) Başarılı yanıt dön
+        // 3) Kaynak bazlı özet oluştur
+        const sourceSummary = RSS_FEEDS.map((feed) => {
+            const feedNews = news.filter((n) => n.source === feed.source);
+            return {
+                source: feed.source,
+                url: feed.url,
+                fetchedCount: feedNews.length,
+            };
+        });
+
+        // 4) Başarılı yanıt dön
         return res.status(200).json({
             success: true,
             generatedAt: new Date().toISOString(),
+            sources: sourceSummary,
             newsCount: news.length,
+            news: news.map((item) => ({
+                source: item.source,
+                title: item.title,
+                link: item.link,
+                date: item.date,
+            })),
             podcastScript,
         });
     } catch (err) {
