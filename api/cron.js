@@ -1,5 +1,77 @@
 const Parser = require("rss-parser");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const https = require("https");
+
+/**
+ * Telegram'a mesaj gönderir. Uzun metinleri otomatik böler.
+ * @param {string} text - Gönderilecek metin
+ */
+async function sendTelegram(text) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+        console.warn("[TELEGRAM] Bot token veya chat ID tanımlı değil, bildirim atlanıyor.");
+        return;
+    }
+
+    // Telegram mesaj limiti 4096 karakter, uzun metinleri böl
+    const MAX_LENGTH = 4000;
+    const chunks = [];
+    for (let i = 0; i < text.length; i += MAX_LENGTH) {
+        chunks.push(text.slice(i, i + MAX_LENGTH));
+    }
+
+    for (let i = 0; i < chunks.length; i++) {
+        const prefix = chunks.length > 1 ? `📄 Bölüm ${i + 1}/${chunks.length}\n\n` : "";
+        const message = prefix + chunks[i];
+
+        const payload = JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: "Markdown",
+        });
+
+        await new Promise((resolve, reject) => {
+            const req = https.request(
+                {
+                    hostname: "api.telegram.org",
+                    path: `/bot${botToken}/sendMessage`,
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Content-Length": Buffer.byteLength(payload),
+                    },
+                },
+                (res) => {
+                    let data = "";
+                    res.on("data", (chunk) => (data += chunk));
+                    res.on("end", () => {
+                        if (res.statusCode === 200) {
+                            resolve(data);
+                        } else {
+                            console.error(`[TELEGRAM] Hata (${res.statusCode}):`, data);
+                            resolve(data); // Hata olsa bile devam et
+                        }
+                    });
+                }
+            );
+            req.on("error", (err) => {
+                console.error("[TELEGRAM] Bağlantı hatası:", err.message);
+                resolve(); // Hata olsa bile devam et
+            });
+            req.write(payload);
+            req.end();
+        });
+
+        // Parçalar arası kısa bekleme (Telegram rate limit)
+        if (i < chunks.length - 1) {
+            await new Promise((r) => setTimeout(r, 500));
+        }
+    }
+
+    console.log(`[TELEGRAM] Podcast metni ${chunks.length} parça halinde gönderildi.`);
+}
 
 const RSS_FEEDS = [
     { url: "https://www.reddit.com/r/cars/top/.rss?t=day", source: "Reddit r/cars" },
@@ -146,6 +218,15 @@ module.exports = async function handler(req, res) {
         const podcastScript = await generatePodcastScript(news);
 
         console.log("[CRON] Podcast metni başarıyla oluşturuldu.");
+
+        // 3) Telegram bildirimi gönder
+        const telegramHeader = "🎙️ *En Otomobil Haberleri* — Yeni Bölüm!\n\n";
+        try {
+            await sendTelegram(telegramHeader + podcastScript);
+        } catch (telegramErr) {
+            console.error("[TELEGRAM] Bildirim gönderilemedi:", telegramErr.message);
+            // Telegram hatası podcast üretimini engellemez
+        }
 
         // 3) Kaynak bazlı özet oluştur
         const sourceSummary = RSS_FEEDS.map((feed) => {
