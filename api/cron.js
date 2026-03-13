@@ -21,7 +21,9 @@ KESİN KURALLAR:
 - Eğer verilen haberlerin hepsi sıkıcı şirket/finans haberleri ise, podcast metninin başına "Bugün dişe dokunur bir haber yok, garajda takılalım!" yaz ve direkt "Gizli Garaj" köşesine geç. Bu durumda Gizli Garaj bölümünü ekstra uzun ve detaylı yap.
 
 PODCAST FORMATI:
-- Verilen haberlerden kurallara uyan en ilgi çekici 3 haberi seç.
+- Haberleri seçerken sayı sınırı koyma. Kurallara uyan tüm önemli haberleri kullan.
+- Bir haberin önemini şöyle belirle: Eğer aynı haber birden fazla kaynakta geçiyorsa, o haber gerçekten önemlidir ve kesinlikle podcastte yer almalıdır. Tekrar eden haberleri birleştirip tek bir kapsamlı haber olarak sun.
+- Sadece tek bir kaynakta geçen ama gerçekten ilginç/sürücü odaklı haberler de dahil edilebilir.
 - Haberleri akıcı, sohbet havasında ve Türkçe bir podcast metni olarak hazırla.
 - Reddit haberlerinde topluluğun reaksiyonlarına ve yorumlarına değin.
 - Podcast'in uygun bir yerinde günümüz araçlarının aşırı elektronik yapısını, efsanevi 1.6 Multijet motorların o saf mekanik dayanıklılığı ve sorunsuzluğu ile esprili bir dille kıyasla.
