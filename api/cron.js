@@ -5,9 +5,13 @@ const RSS_FEEDS = [
     { url: "https://www.reddit.com/r/cars/top/.rss?t=day", source: "Reddit r/cars" },
     { url: "https://www.motor1.com/rss/", source: "Motor1" },
     { url: "https://jalopnik.com/rss", source: "Jalopnik" },
+    { url: "https://www.thedrive.com/feed", source: "The Drive" },
+    { url: "https://www.carscoops.com/feed/", source: "CarScoops" },
+    { url: "https://www.roadandtrack.com/rss/all.xml", source: "Road & Track" },
+    { url: "https://www.autoblog.com/rss.xml", source: "Autoblog" },
 ];
 
-const MAX_ITEMS_PER_FEED = 3;
+const MAX_ITEMS_PER_FEED = 5;
 
 const SYSTEM_PROMPT = `Sen "En Otomobil Haberleri" podcast'inin sunucususun. Profesyonel bir otomobil gazetecisi ve tutkulu bir araba insanısın.
 
