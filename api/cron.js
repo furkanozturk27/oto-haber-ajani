@@ -14,9 +14,28 @@ async function sendTelegram(text) {
 
     const MAX_LENGTH = 4000;
     const chunks = [];
-    for (let i = 0; i < text.length; i += MAX_LENGTH) {
-        chunks.push(text.slice(i, i + MAX_LENGTH));
+    let currentChunk = "";
+
+    const paragraphs = text.split("\n\n");
+    for (const p of paragraphs) {
+        if (currentChunk.length + p.length + 2 > MAX_LENGTH) {
+            if (currentChunk) chunks.push(currentChunk.trimEnd());
+            
+            if (p.length > MAX_LENGTH) {
+                let tempP = p;
+                while (tempP.length > 0) {
+                    chunks.push(tempP.slice(0, MAX_LENGTH));
+                    tempP = tempP.slice(MAX_LENGTH);
+                }
+                currentChunk = "";
+            } else {
+                currentChunk = p + "\n\n";
+            }
+        } else {
+            currentChunk += p + "\n\n";
+        }
     }
+    if (currentChunk) chunks.push(currentChunk.trimEnd());
 
     for (let i = 0; i < chunks.length; i++) {
         const prefix = chunks.length > 1 ? `📄 Bölüm ${i + 1}/${chunks.length}\n\n` : "";
@@ -100,19 +119,7 @@ const MAX_ITEMS_PER_FEED = 5;
  */
 function getDateRange() {
     const now = new Date();
-    const dayOfWeek = now.getUTCDay(); // 0=Pazar, 1=Pazartesi, 5=Cuma
-
-    let daysBack;
-    if (dayOfWeek === 1) {
-        // Pazartesi: Son 3 günün haberleri (Cuma-Cumartesi-Pazar)
-        daysBack = 3;
-    } else if (dayOfWeek === 5) {
-        // Cuma: Son 4 günün haberleri (Pazartesi-Salı-Çarşamba-Perşembe)
-        daysBack = 4;
-    } else {
-        // Manuel tetikleme durumunda son 3 gün
-        daysBack = 3;
-    }
+    const daysBack = 1;
 
     const startDate = new Date(now);
     startDate.setUTCDate(startDate.getUTCDate() - daysBack);
@@ -122,35 +129,33 @@ function getDateRange() {
         startDate,
         endDate: now,
         daysBack,
-        dayName: dayOfWeek === 1 ? "Pazartesi" : dayOfWeek === 5 ? "Cuma" : "Manuel",
+        dayName: "Günlük",
     };
 }
 
 // ─── Sistem Komutu ───────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Sen "En Otomobil Haberleri" podcast'inin sunucususun. Profesyonel bir otomobil gazetecisi ve tutkulu bir araba insanısın.
+const SYSTEM_PROMPT = `Sen profesyonel bir otomobil habercisi ve editörüsün. Otomobil tutkunları için günlük bir bülten hazırlıyorsun.
 
 KESİN KURALLAR:
 - Bana ASLA finans, borsa, şirket politikası, CEO açıklamaları, elektrikli araç yatırımı, satış rakamları veya kurumsal haber getirme.
 - SADECE şu konulardaki haberleri seç: motor mekaniği, yeni performans araçları, retro/klasik araçlar, modifiye kültürü, sürücü odaklı haberler, yarış haberleri, ilginç otomobil hikayeleri.
-- Eğer verilen haberlerin hepsi sıkıcı şirket/finans haberleri ise, podcast metninin başına "Bugün dişe dokunur bir haber yok, garajda takılalım!" yaz ve direkt "Gizli Garaj" köşesine geç. Bu durumda Gizli Garaj bölümünü ekstra uzun ve detaylı yap.
+- ASLA "Merhaba, podcast'e hoş geldiniz" veya "Gizli Garaj'da takılalım" gibi sohbet tarzı ifadeler kullanma. Doğrudan profesyonel, net, tarafsız ve ciddi bir haber dili kullan.
 
 TÜRKİYE ÖNCELİĞİ:
 - Türkiye kaynaklarından gelen haberler (Motor1 Türkiye, Otopark, Sekizsilindir, Otoaktüel) ÇOK ÖNEMLİDİR.
-- Türkiye otomobil piyasası, ÖTV/KDV değişiklikleri, yerli üretim, Türkiye'deki lansman ve fiyat güncellemeleri, Türkiye'deki modifiye kültürü gibi konular podcastte ÖNCELİKLİ olarak ve GENİŞ YER AYRILIARAK işlenmelidir.
-- Türkiye haberleri varsa, bunlar podcastin ilk sırasında yer almalıdır.
+- Türkiye otomobil piyasası, ÖTV/KDV değişiklikleri, yerli üretim, Türkiye'deki lansman ve fiyat güncellemeleri, Türkiye'deki modifiye kültürü gibi konular bültende ÖNCELİKLİ olarak işlenmelidir.
+- Türkiye haberleri varsa, bunlar bültenin ilk sırasında yer almalıdır.
 
 HABER SEÇİM MANTIĞI:
-- Haberleri seçerken sayı sınırı koyma. Kurallara uyan tüm önemli haberleri kullan.
-- Bir haberin önemini şöyle belirle: Eğer aynı haber birden fazla kaynakta geçiyorsa, o haber gerçekten önemlidir ve kesinlikle podcastte yer almalıdır. Tekrar eden haberleri birleştirip tek bir kapsamlı haber olarak sun.
-- Sadece tek bir kaynakta geçen ama gerçekten ilginç/sürücü odaklı haberler de dahil edilebilir.
+- Bir haberin önemini şöyle belirle: Eğer aynı haber birden fazla kaynakta geçiyorsa, o haber gerçekten önemlidir ve kesinlikle bültende yer almalıdır. Tekrar eden haberleri birleştirip tek bir kapsamlı haber olarak sun.
 - Sana verilen tarih aralığı dışındaki haberleri KULLANMA. Sadece belirtilen tarih aralığındaki haberleri işle.
 
-PODCAST FORMATI:
-- Haberleri akıcı, sohbet havasında ve Türkçe bir podcast metni olarak hazırla.
-- Reddit haberlerinde topluluğun reaksiyonlarına ve yorumlarına değin.
-- Podcast'in uygun bir yerinde günümüz araçlarının aşırı elektronik yapısını, efsanevi 1.6 Multijet motorların o saf mekanik dayanıklılığı ve sorunsuzluğu ile esprili bir dille kıyasla.
-- Podcast'in sonuna "Gizli Garaj" isimli özel bir köşe ekle. Bu köşede; 90'lar ve 2000'lerin efsanevi araçlarına (örneğin VW Golf Mk4, Opel Vectra, Toyota Corolla AE101, Fiat Tipo, Renault Broadway, Tofaş Doğan, Kartal gibi) dair retro bir detay, modifiye kültürü veya bir anı paylaş.`;
+BÜLTEN FORMATI:
+- Haberleri akıcı, profesyonel ve Türkçe bir günlük haber bülteni formatında (madde madde veya net başlıklarla) hazırla.
+- Her haberin başlığını net bir şekilde kalın (bold) veya emoji ile belirginleştir.
+- Podcast tarzı giriş-gelişme-sonuç veya "Görüşmek üzere" gibi vedalar YAZMA.
+- Sadece saf, okuması kolay, doyurucu günlük otomobil haberleri sun.`;
 
 // ─── RSS Çekme ───────────────────────────────────────────────────────
 
@@ -230,14 +235,30 @@ ${newsText}
 
 Yukarıdaki haberleri kullanarak podcast metnini hazırla. SADECE ${startStr} - ${endStr} arasındaki haberleri kullan, daha eski haberleri dahil etme.`;
 
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: {
-            temperature: 0.9,
-            maxOutputTokens: 8192,
-        },
-    });
+    let result;
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            result = await model.generateContent({
+                contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                generationConfig: {
+                    temperature: 0.9,
+                    maxOutputTokens: 8192,
+                },
+            });
+            break; // Başarılı olursa döngüden çık
+        } catch (error) {
+            console.error(`[GEMINI] ⚠️ API Hatası (Deneme ${attempt}/${maxRetries}):`, error.message);
+            if (attempt === maxRetries) {
+                throw error; // Tüm denemeler başarısızsa hatayı fırlat
+            }
+            // Bekleme süresi: 1. denemede 5sn, 2. denemede 10sn
+            const waitTime = attempt * 5000;
+            console.log(`[GEMINI] ⏳ ${waitTime / 1000} saniye beklenip tekrar deneniyor...`);
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
+    }
 
     const response = result.response;
     const text = response.text();
@@ -265,7 +286,7 @@ module.exports = async function handler(req, res) {
         if (news.length === 0) {
             console.warn("[CRON] Hiçbir kaynaktan haber alınamadı.");
 
-            const noNewsMsg = "🎙️ *En Otomobil Haberleri*\n\n⚠️ Bu dönemde kaynaklardan haber çekilemedi. Bir sonraki bölümde görüşmek üzere!";
+            const noNewsMsg = "📰 *Otomobil Haber Bülteni*\n\n⚠️ Son 24 saat içinde kaynaklardan otomobil haberi çekilemedi.";
             try { await sendTelegram(noNewsMsg); } catch (e) { /* sessizce geç */ }
 
             return res.status(500).json({
@@ -283,7 +304,7 @@ module.exports = async function handler(req, res) {
         // 4) Telegram bildirimi gönder
         const startStr = dateRange.startDate.toLocaleDateString("tr-TR");
         const endStr = dateRange.endDate.toLocaleDateString("tr-TR");
-        const telegramHeader = `🎙️ *En Otomobil Haberleri — ${dateRange.dayName} Bölümü*\n📅 ${startStr} — ${endStr} | 📰 ${news.length} kaynaktan derlendi\n\n`;
+        const telegramHeader = `📰 *Günlük Otomobil Haber Bülteni*\n📅 ${startStr} — ${endStr} | 📰 ${news.length} kaynak\n\n`;
         try {
             await sendTelegram(telegramHeader + podcastScript);
         } catch (telegramErr) {
