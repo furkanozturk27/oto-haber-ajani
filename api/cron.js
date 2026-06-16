@@ -38,7 +38,7 @@ async function sendTelegram(text) {
     if (currentChunk) chunks.push(currentChunk.trimEnd());
 
     for (let i = 0; i < chunks.length; i++) {
-        const prefix = chunks.length > 1 ? `📄 Bölüm ${i + 1}/${chunks.length}\n\n` : "";
+        const prefix = chunks.length > 1 ? `[Kısım ${i + 1}/${chunks.length}]\n\n` : "";
         const message = prefix + chunks[i];
 
         const payload = JSON.stringify({
