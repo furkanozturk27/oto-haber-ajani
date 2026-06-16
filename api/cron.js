@@ -155,7 +155,8 @@ BÜLTEN FORMATI:
 - Haberleri akıcı, profesyonel ve Türkçe bir günlük haber bülteni formatında (madde madde veya net başlıklarla) hazırla.
 - Her haberin başlığını net bir şekilde kalın (bold) veya emoji ile belirginleştir.
 - Podcast tarzı giriş-gelişme-sonuç veya "Görüşmek üzere" gibi vedalar YAZMA.
-- Sadece saf, okuması kolay, doyurucu günlük otomobil haberleri sun.`;
+- Sadece saf, okuması kolay, doyurucu günlük otomobil haberleri sun.
+- KESİN KURAL: Her haberin sonuna MUTLAKA o haberin orijinal bağlantısını ekle. Sana verilen "Link: ..." verisini kullanarak "🔗 [Haberi Oku](link_adresi)" şeklinde her haberin hemen altına yerleştir.`;
 
 // ─── RSS Çekme ───────────────────────────────────────────────────────
 
