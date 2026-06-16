@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@vercel/kv": "^3.0.0",
     "rss-parser": "^3.13.0"
   }
 }
