@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).send('OK');
         }
 
-        if (text === "/haberler") {
+        if (text.startsWith("/haber")) {
             await sendSimpleTelegramMessage(chatId, "⏱️ Taze otomobil haberleri toparlanıyor, fotoğraflar aranıyor ve yapay zeka bülteni hazırlıyor... Lütfen bekleyin.");
 
             const { allNews, startDate, endDate } = await fetchAllFeeds(1);
